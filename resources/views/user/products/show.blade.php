@@ -1,4 +1,9 @@
 <x-layout.app title="{{$product->name . ' - product details'}}">
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" id="flash-message">
+            {{ session('error') }}
+        </div>
+    @endif
     <div class="container py-5">
         <!-- Back to Products Link -->
         <a href="{{ route('user.products.index') }}" class="btn btn-outline-secondary mb-4">
@@ -19,11 +24,18 @@
                 <p class="lead">{{ $product->description }}</p>
 
                 <!-- Add to Cart Button -->
-                <div class="mt-4">
+                <div class="mt-4 d-flex justify-content-evenly">
                     <form action="{{ route('cart.add', $product->id) }}" method="POST">
                         @csrf
                         <button class="btn btn-warning btn-lg">
                             <i class="fas fa-cart-plus"></i> Add to Cart
+                        </button>
+                    </form>
+                    <form action="{{ route('wishlist.add') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                        <button type="submit" class="btn btn-outline-danger btn-lg">
+                            <i class="fas fa-heart"></i> Add to Wishlist
                         </button>
                     </form>
                 </div>

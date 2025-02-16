@@ -38,7 +38,7 @@
                         <a class="nav-link" href="{{ route('cart.index') }}"><i class="fas fa-shopping-cart"></i>
                             Cart
                             <span id="cart-count" class="badge bg-danger">
-                                {{ session('cart') ? array_sum(array_column(session('cart'), 'quantity')) : 0 }}
+                                {{ collect(json_decode(Cookie::get('cart', '[]'), true))->sum('quantity') }}
                             </span>
                         </a>
                     </li>
@@ -54,6 +54,15 @@
                     </li>
                     <li class="nav-item ms-5">
                         Welcome, {{ Auth::user()->name }}! 👋
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('wishlist.index') }}">
+                            <i class="fas fa-heart"></i> Wishlist
+                            <span class="badge bg-danger">
+                                {{ DB::table('wishlist')->where('user_id', Auth::id())->count() }}
+{{--                                {{ App\Models\Wishlist::where('user_id', Auth::id())->count() }}--}}
+                            </span>
+                        </a>
                     </li>
                 @else
                     <li class="nav-item ms-4">
@@ -90,5 +99,17 @@
 <!-- Footer -->
 <x-footer></x-footer>
 <script src="{{ asset('assets/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        setTimeout(function() {
+            let flashMessage = document.getElementById("flash-message");
+            if (flashMessage) {
+                flashMessage.style.transition = "opacity 0.5s";
+                flashMessage.style.opacity = "0";
+                setTimeout(() => flashMessage.remove(), 500);
+            }
+        }, 2000);
+    });
+</script>
 </body>
 </html>
