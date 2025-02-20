@@ -8,32 +8,34 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminLoginController extends Controller
 {
-    public function showAdminLoginForm() {
+    // Display the admin login form
+    public function showAdminLoginForm()
+    {
         return view('admin.auth.login');
     }
 
-
-    public function adminLogin(Request $request) {
-
+// Handle admin login request
+    public function adminLogin(Request $request)
+    {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required','min:8'],
+            'email' => 'required|email',    // Validate email and password
+            'password' => 'required|min:8',
         ]);
 
         if (Auth::guard('admin')->attempt($credentials)) {
-            $request->session()->regenerate();  // Regenerate session ID for security
-            return redirect()->intended(route('admin.dashboard'));
+            $request->session()->regenerate();  // Regenerate session for security
+            return redirect()->intended(route('admin.dashboard')); // Redirect to dashboard
         }
 
-        return back()->withErrors([
-            'admin_login_error' => 'invalid email or password.',
-        ]);
+        return back()->withErrors(['admin_login_error' => 'Invalid email or password.']); // Error on failure
     }
 
-    public function adminLogout(Request $request) {
-        Auth::guard('admin')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();  // Regenerate the CSRF token value.
-        return redirect()->route('admin.login');
+// Handle admin logout request
+    public function adminLogout(Request $request)
+    {
+        Auth::guard('admin')->logout(); // Log out admin
+        $request->session()->invalidate(); // Invalidate session
+        $request->session()->regenerateToken(); // Regenerate CSRF token
+        return redirect()->route('admin.login'); // Redirect to login page
     }
 }

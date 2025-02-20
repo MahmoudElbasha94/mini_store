@@ -23,6 +23,11 @@
                     <td>
                         <a href="{{ route('admin.categories.edit', $category->id) }}"
                            class="btn btn-sm btn-warning">Edit</a>
+                        <form action="{{ route('admin.categories.destroy', $category) }}" method="POST"
+                              style="display:none;" id="delete-form-{{ $category->id }}">
+                            @csrf
+                            @method('DELETE')
+                        </form>
                         <button class="btn btn-sm btn-danger"
                                 onclick="confirmDelete({{ $category->id }})">
                             Delete

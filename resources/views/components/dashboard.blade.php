@@ -44,6 +44,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('admin.coupons.index') }}">
+                        <i class="fa-solid fa-tag"></i>
+                        <span>Coupons</span>
+                    </a>
+                </li>
+                <li>
                     <a href="#">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>

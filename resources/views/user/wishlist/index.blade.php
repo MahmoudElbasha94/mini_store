@@ -2,10 +2,6 @@
     <div class="container py-5">
         <h1 class="mb-4">Your Wishlist</h1>
 
-        @if (session('success'))
-            <div class="alert alert-success" id="flash-message">{{ session('success') }}</div>
-        @endif
-
         @if ($wishlist->isEmpty())
             <div class="alert alert-info">
                 Your wishlist is empty. <a href="{{ route('user.products.index') }}" class="alert-link">Browse products</a>.

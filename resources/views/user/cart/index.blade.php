@@ -1,4 +1,14 @@
 <x-layout.app>
+    <div aria-live="polite" aria-atomic="true" class="position-relative">
+        <div class="toast-container top-0 end-0 p-3">
+            <!-- Then put toasts within -->
+            <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-body text-bg-warning fw-bold" id="toast-message">
+
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="container py-5" id="cart-section">
         <h1 class="mb-4">Your Shopping Cart</h1>
         @if (count($cart) > 0)
@@ -41,9 +51,23 @@
                 </table>
             </div>
 
+            <div class="mb-4">
+                <form action="{{ route('apply.coupon') }}" method="POST" class="d-flex gap-2 mt-3">
+                    @csrf
+                    <div class="input-group">
+                        <input type="text" name="coupon_code" placeholder="Enter Coupon Code" class="form-control flex-grow-1"/>
+                        <button type="submit" class="btn btn-primary">Apply Coupon</button>
+                    </div>
+                </form>
+
+            </div>
             <div class="text-end">
-                <h4>Total: {{ number_format($total, 2) }} EGP</h4>
-                <a href="#" class="btn btn-primary btn-lg mt-4">Proceed to Checkout</a>
+                @if($discount > 0)
+                    <h5>Discount: -{{ number_format($discountAmount, 2) }} EGP ({{ $discount }}%)</h5>
+                @endif
+                <h4>Total: <span class="fw-bold text-primary">{{ number_format($totalAfterDiscount, 2) }}</span> EGP
+                </h4>
+                <a href="{{ route('checkout.index') }}" class="btn btn-primary btn-lg mt-4">Proceed to Checkout</a>
             </div>
         @else
             <div class="alert alert-info">
@@ -52,6 +76,7 @@
             </div>
         @endif
     </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Function to update quantity
@@ -62,13 +87,15 @@
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify({ change: change })
+                    body: JSON.stringify({change: change})
                 })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
                             // Reload the page to reflect changes
                             location.reload();
+                        } else {
+                            showToast(data.message);
                         }
                     });
             }
@@ -90,6 +117,19 @@
                     updateQuantity(productId, change);
                 });
             });
+
+            // Function to show the toast notification using native Bootstrap JS
+            function showToast(message) {
+                const toastMessage = document.getElementById('toast-message');
+                const toastElement = document.getElementById('toast');
+
+                // Set the message content
+                toastMessage.textContent = message;
+
+                // Create a new Toast instance and show it
+                const toast = new bootstrap.Toast(toastElement);
+                toast.show(); // Show the toast
+            }
 
             // Update the cart count when the page loads
             updateCartCount();

@@ -9,9 +9,14 @@
             <h2 class="text-center mt-4">Available Products</h2>
             <div class="row">
                 @foreach ($products as $product)
-                    <x-product-card productImage="{{ asset($product->image) }}" productName="{{ $product->name }}"
-                                    productPrice="{{ $product->price }}"
-                                    productLink="{{ route('user.products.show', ['product' => $product->name, 'category' => $product->categories->where('pivot.is_default', true)->first()->slug]) }}"/>
+                    <x-product-card
+                        productImage="{{ asset($product->image) }}"
+                        productName="{{ $product->name }}"
+                        productPrice="{{ $product->discount > 0 ? $product->price - ($product->price * ($product->discount / 100)) : $product->price }}"
+                        productOriginalPrice="{{ $product->discount > 0 ? $product->price : null }}"
+                        productDiscount="{{ $product->discount }}"
+                        averageRating="{{ (float)$product->reviews->avg('rating') }}"
+                        productLink="{{ route('user.products.show', ['product' => $product->name, 'category' => $product->categories->where('pivot.is_default', true)->first()->slug]) }}"/>
                 @endforeach
             </div>
         </div>

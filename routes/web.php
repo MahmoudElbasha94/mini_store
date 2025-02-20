@@ -2,14 +2,19 @@
 
 use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PaymobController;
 use App\Http\Controllers\User\CartController;
+use App\Http\Controllers\User\CheckoutController;
+use App\Http\Controllers\User\ProfileController;
+use App\Http\Controllers\User\ReviewController;
 use App\Http\Controllers\User\ShopController;
-use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\User\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 //home
@@ -51,6 +56,12 @@ Route::middleware(['auth:admin'])->group(function () {
         Route::get('products/{product}/edit', [ProductController::class, 'edit'])->name('admin.products.edit');
         Route::put('products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
         Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
+
+        //admin coupons
+        Route::get('coupons', [CouponController::class, 'index'])->name('admin.coupons.index');
+        Route::get('coupons/create', [CouponController::class, 'create'])->name('admin.coupons.create');
+        Route::post('coupons', [CouponController::class, 'store'])->name('admin.coupons.store');
+        Route::delete('coupons/{coupon}', [CouponController::class, 'destroy'])->name('admin.coupons.destroy');
     });
 });
 
@@ -74,4 +85,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
     Route::post('/wishlist/add', [WishlistController::class, 'store'])->name('wishlist.add');
     Route::delete('/wishlist/remove/{id}', [WishlistController::class, 'destroy'])->name('wishlist.remove');
+
+
+    //user profile routes
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+
+    //user review route
+    Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 });
+
+
+//user coupons route
+Route::post('/apply-coupon', [CartController::class, 'applyCoupon'])->name('apply.coupon');
+
+
+
+Route::get('/payment/{orderId}', [PaymobController::class, 'initiatePayment'])->name('payment.initiate');
+Route::get('/payment/callback', [PaymobController::class, 'paymentCallback'])->name('payment.callback');
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::get('/checkout', [CheckoutController::class, 'showOrderInfoForm'])->name('checkout.index');

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ShopController extends Controller
 {
@@ -24,6 +25,14 @@ class ShopController extends Controller
                 $query->where('categories.id', $category->id);
             })
             ->firstOrFail();
-        return view('user.products.show', compact('product'));
+
+        //average rating
+        $averageRating = $product->reviews->avg('rating');
+
+        $existingReview = null;
+        if (Auth::check()) {
+            $existingReview = $product->reviews()->where('user_id', Auth::id())->first();
+        }
+        return view('user.products.show', compact('product', 'existingReview', 'averageRating'));
     }
 }

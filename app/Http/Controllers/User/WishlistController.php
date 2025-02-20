@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User;
 
+use App\Http\Controllers\Controller;
 use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,12 +24,16 @@ class WishlistController extends Controller
             'product_id' => 'required|exists:products,id',
         ]);
 
-        Wishlist::firstOrCreate([
+        $wishlist = Wishlist::firstOrCreate([
             'user_id' => Auth::id(),
             'product_id' => $request->product_id,
         ]);
 
-        return back()->with('success', 'Product added to wishlist.');
+        if ($wishlist->wasRecentlyCreated) {
+            return back()->with('success', 'Product added to wishlist. 🎉');
+        } else {
+            return back()->with('warning', 'This product is already in your wishlist! 😉');
+        }
     }
 
     // حذف منتج من الـ Wishlist

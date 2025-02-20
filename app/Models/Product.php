@@ -12,9 +12,15 @@ class Product extends Model
         'price',
         'stock',
         'image',
+        'discount'
     ];
 
     public function categories() {
         return $this->belongsToMany(Category::class, 'category_product')->withPivot('is_default');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 }

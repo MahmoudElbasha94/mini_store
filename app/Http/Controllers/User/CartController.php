@@ -3,18 +3,30 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Coupon;
 use App\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Session;
 
 class CartController extends Controller
 {
     public function index(Request $request)
     {
-//        $cart = session()->get("cart", []);
+        // جلب السلة من الكوكيز
         $cart = json_decode(Cookie::get('cart', '[]'), true);
+
+        // حساب الإجمالي
         $total = $this->calculateTotal($cart);
-        return view('user.cart.index', compact('cart', 'total'));
+
+        // جلب الخصم من الكوكيز (لو موجود)
+        $discount = session('discount', 0);
+        $discountAmount = ($total * $discount) / 100;
+        $totalAfterDiscount = $total - $discountAmount;
+
+        // إرجاع البيانات للـ View
+        return view('user.cart.index', compact('cart', 'total', 'discount', 'discountAmount', 'totalAfterDiscount'));
     }
 
     public function addToCart($productId)
@@ -41,7 +53,6 @@ class CartController extends Controller
             ];
         }
 
-//        session()->put("cart", $cart);
         Cookie::queue('cart', json_encode($cart), 60 * 24 * 7);
         return redirect()->back()->with('success', 'added to cart successfully!');
     }
@@ -50,15 +61,28 @@ class CartController extends Controller
         // Retrieve the change value from the request body
         $change = $request->input('change');
 
-        // Get the current cart from the session
-//        $cart = session()->get("cart", []);
-
+        // Get the current cart from the cookie
         $cart = json_decode(Cookie::get('cart', '[]'), true);
+
+        // Retrieve the product details
+        $product = Product::find($productId);
 
         // Check if the product exists in the cart
         if (isset($cart[$productId])) {
+
+            // Get the current stock of the product
+            $stock = $product->stock;
+
+            // Calculate the new quantity
+            $newQuantity = $cart[$productId]['quantity'] + $change;
+
+            // Ensure the new quantity doesn't exceed the available stock
+            if ($newQuantity > $stock) {
+                return response()->json(['success' => false, 'message' => 'Not enough stock available']);
+            }
+
             // Update the quantity
-            $cart[$productId]['quantity'] += $change;
+            $cart[$productId]['quantity'] = $newQuantity;
 
             // Ensure the quantity doesn't go below 1
             if ($cart[$productId]['quantity'] < 1) {
@@ -80,6 +104,11 @@ class CartController extends Controller
         if (isset($cart[$productId])) {
             unset($cart[$productId]);
             Cookie::queue('cart', json_encode($cart), 60 * 24 * 7);
+
+            // If the cart is now empty, remove the discount session
+            if (empty($cart)) {
+                session()->forget(['discount']);
+            }
         }
 
         return redirect()->back()->with('success', 'Product removed from cart!');
@@ -88,7 +117,6 @@ class CartController extends Controller
     public function getCartCount(Request $request)
     {
 
-//        $cart = session()->get("cart", []);
         $cart = json_decode(Cookie::get('cart', '[]'), true);
         $count = array_sum(array_column($cart, 'quantity'));
 
@@ -102,5 +130,35 @@ class CartController extends Controller
             $total += $item['price'] * $item['quantity'];
         }
         return $total;
+    }
+
+
+    public function applyCoupon(Request $request)
+    {
+        $request->validate([
+            'coupon_code' => 'required|string|exists:coupons,code',
+        ]);
+
+        $coupon = Coupon::where('code', $request->coupon_code)->first();
+
+        // Check if a coupon is already applied
+        if (session()->has('discount')) {
+            return redirect()->back()->with('error', 'A coupon is already applied!😏');
+        }
+
+
+        // Check if the coupon is still valid
+        if ($coupon->valid_from && Carbon::now()->lt($coupon->valid_from)) {
+            return back()->with('error', 'This coupon is not yet active.');
+        }
+
+        if ($coupon->valid_until && Carbon::now()->gt($coupon->valid_until)) {
+            return back()->with('error', 'This coupon has expired.');
+        }
+
+        // Store coupon in session to apply it to the order later
+        Session::put(['discount' => $coupon->discount]);
+
+        return back()->with('success', 'Coupon applied successfully! 🎉');
     }
 }
